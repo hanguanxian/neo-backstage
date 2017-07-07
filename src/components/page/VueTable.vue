@@ -6,10 +6,7 @@
                 <el-breadcrumb-item>Vue表格组件</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
-        <div class="plugins-tips">
-            vue-datasource：一个用于动态创建表格的vue.js服务端组件。
-            访问地址：<a href="https://github.com/coderdiaz/vue-datasource" target="_blank">vue-datasource</a>
-        </div>
+        
         <datasource language="en" :table-data="getData" :columns="columns" :pagination="information.pagination"
                 :actions="actions"
                 v-on:change="changePage"
@@ -45,14 +42,28 @@
                     {
                         name: 'ip',
                         key: 'ip',
+                        render(value) { // Render callback
+                          return `你的IP: ${value}`;
+                      }
                     }
                 ],
                 actions: [
                     {
-                        text: 'Click',
+                        text: 'choose',
                         class: 'btn-primary',
                         event(e, row) {
                             self.$message('选中的行数： ' + row.row.id);
+                        }
+                    },{
+                        text: 'delete', // Button label
+                        icon: 'danger', // Button icon
+                        class: 'btn-danger', // Button class (background color)
+                        show(selectedRow) { // Event to define a condition to display the button with the selected row
+                            return true
+                        },
+                        event(e, row) { // Event handler callback. Gets event instace and selected row
+                            console.log('Click row: ', row); // If no row is selected, row will be NULL
+                            self.information.data.shift(row.index);
                         }
                     }
                 ],
@@ -73,6 +84,7 @@
         },
         computed:{
             getData(){
+              //search 方法
                 const self = this;
                 return self.information.data.filter(function (d) {
                     if(d.name.indexOf(self.query) > -1){
@@ -82,9 +94,6 @@
             }
         },
         beforeMount(){
-            // if(process.env.NODE_ENV === 'development'){
-            //     this.url = '/ms/table/source';
-            // };
             axios.get(this.url).then( (res) => {
                 this.information = res.data;
             })

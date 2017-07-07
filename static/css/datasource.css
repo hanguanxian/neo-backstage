@@ -80,6 +80,11 @@
     background-color: #3097D1;
     border-color: #2a88bd;
 }
+.vue-datasource .btn-danger {
+    color: #fff;
+    background-color: #ff4949;
+    border-color: #ff4949;
+}
 .vue-datasource .table {
     width: 100%;
     max-width: 100%;
