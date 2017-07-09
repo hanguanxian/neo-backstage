@@ -8,7 +8,7 @@
             <el-tabs v-model="editableTabsValue" type="card" closable @tab-remove="removeTab" @tab-click='tabToggle'>
               <el-tab-pane
                 v-for="(item, index) in tabs"
-                :label="item.tabName" :name="item.name"
+                :label="item.title" :name="item.name" :key="item.name"
               >
               </el-tab-pane>
               <keep-alive>
@@ -31,19 +31,24 @@
           	return {
     	        user: {},
     	        tabs:[{
-    		      	tabName: 'readme',
+    		      	title: 'readme',
     		      	name: '0',
     		      	path: 'readme'
+    		    },{
+    		      	title: 'baseTable',
+    		      	name: '1',
+    		      	path: 'baseTable'
+    		    },{
+    		      	title: 'vueTable',
+    		      	name: '2',
+    		      	path: 'vueTable'
     		    }],
-    	        editableTabsValue: '0',
-    	        currentView:'readme',
+    	        editableTabsValue: '1',
+    	        currentView:'baseTable',
     	        dic : { //前面是component,后面是对应的名字
-    	        	"index" : "index",
-    	        	"form" : "form",
-    	        	"table" : "table",
-    	        	"other" : "other",
-    	        	"nav1" : "导航一",
-    	        	"nav3" : "导航三"
+    	        	"readme" : "readme",
+    	        	"baseTable" : "baseTable",
+                    "vueTable" : "vueTable"
     	        }
           	};
         },
@@ -58,14 +63,15 @@
     	    		if(path == vm.tabs[i].path){
     	    			addNewTab = false;
     	    			vm.editableTabsValue = i + '';
-    	    			vm.currentView = 'v-' + path;
+    	    			vm.currentView =  path;
+                        console.log(vm.currentView);
     	    			return;
     	    		}
     	    	}
 
     	    	if(addNewTab){
     	    		vm.tabs.push({
-    		          	tabName: vm.dic[path],
+    		          	title: vm.dic[path],
     		          	name: vm.tabs.length + '',
     		          	path: path
     		        });
@@ -73,7 +79,7 @@
     		        vm.editableTabsValue = vm.tabs.length - 1 + '';
     	    	}
 
-    	    	vm.currentView = 'v-' + path;
+    	    	vm.currentView =  path;
     	    },
     	    handleSelect(key, keyPath) {
     	    	if(keyPath.length > 1){
@@ -91,7 +97,7 @@
     		              	var nextTab = vm.tabs[index + 1] || vm.tabs[index - 1];
     		              	if (nextTab) {
     		                	activeIndex = nextTab.name;
-    		                	vm.currentView = 'v-' + nextTab.path;
+    		                	vm.currentView =  nextTab.path;
     		                	vm.tabs.splice(index,1);
     		              	}
     		            }
@@ -108,12 +114,16 @@
     	    },
     	    tabToggle(tab){
     	    	var vm = this;
+
     	    	vm.tabs.forEach(function(item,index){
-    	    		if(item.tabName == tab.label){
-    	    			vm.currentView = 'v-' + item.path;
+    	    		if(item.title == tab.label){
+    	    			vm.currentView = item.path;
     	    		}
     	    	})
     	    }
+        },
+        created () {
+            console.log(this.router);
         }
     }
 </script>
