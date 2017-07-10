@@ -1,96 +1,157 @@
 <template>
-    <div>
+    <div class="table">
         <div class="crumbs">
             <el-breadcrumb separator="/">
-                <el-breadcrumb-item><i class="el-icon-setting"></i> 自述</el-breadcrumb-item>
+                <el-breadcrumb-item><i class="el-icon-menu"></i> 文章列表</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
-        <div class="ms-doc">
-            <h3>README.md</h3>
-            <article>
-                <h1>manage-system</h1>
-                <p>基于Vue.js 2.x系列 + Element UI 的后台管理系统解决方案</p>
-                <h2>前言</h2>
-                <p>之前在公司用了Vue + Element组件库做了个后台管理系统，基本很多组件可以直接引用组件库的，但是也有一些需求无法满足。像图片裁剪上传、富文本编辑器、图表等这些在后台管理系统中很常见的功能，就需要引用其他的组件才能完成。从寻找组件，到使用组件的过程中，遇到了很多问题，也积累了宝贵的经验。所以我就把开发这个后台管理系统的经验，总结成这个后台管理系统解决方案。</p>
-                <p>该方案作为一套多功能的后台框架模板，适用于绝大部分的后台管理系统（Web Management System）开发。基于vue.js,使用vue-cli脚手架快速生成项目目录，引用Element UI组件库，方便开发快速简洁好看的组件。分离颜色样式，支持手动切换主题色，而且很方便使用自定义主题色。</p>
-                <h2>功能</h2>
-                <el-checkbox disabled checked>Element UI</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>登录/注销</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>表格</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>表单</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>图表</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>富文本编辑器</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>markdown编辑器</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>图片拖拽/裁剪上传</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>支持切换主题色</el-checkbox>
-                <br>
-                <el-checkbox disabled checked>列表拖拽排序</el-checkbox>
-                <br>
-            </article>
+        <div class="handle-box">
+            <el-input v-model="query" placeholder="筛选关键词" class="handle-input mr10"></el-input>
+            <el-button type="primary" icon="search" @click="onSearch">搜索</el-button>
+            <el-button type="primary" icon="plus" @click="dialogFormVisible = true">添加</el-button>
         </div>
-
+        <el-table :data="tableData" border style="width: 100%" ref="multipleTable" @selection-change="handleSelectionChange">
+            <el-table-column type="selection" width="55"></el-table-column>
+            <el-table-column prop="date" label="日期" sortable width="150">
+            </el-table-column>
+            <el-table-column prop="title" label="标题">
+            </el-table-column>
+            <el-table-column label="跳转地址" width="120">
+              <template scope="scope">
+                <a :href="scope.row.link" target="_blank">{{ scope.row.link }}</a>
+              </template>
+            </el-table-column>
+            <el-table-column prop="imgUrl" label="图片" width="120">
+                <template scope="scope">
+                  <img :src="scope.row.imgUrl" style="width: 100px;"/>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作" width="180">
+                <template scope="scope">
+                    <el-button size="small"
+                            @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                    <el-button size="small" type="danger"
+                            @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        <div class="pagination">
+            <el-pagination
+                    @current-change ="handleCurrentChange"
+                    layout="prev, pager, next"
+                    :total="100">
+            </el-pagination>
+        </div>
+        <el-dialog title="编辑文章" :visible.sync="dialogFormVisible">
+          <el-form :model="form">
+              <el-form-item label="文章标题"
+                    :rules="[{ required: true, message: '请输入标题', trigger: 'blur' }]">
+                    <el-input v-model="form.title"></el-input>
+              </el-form-item>
+              <el-form-item label="文章日期"
+                    :rules="[{ required: true, message: '请选择日期', trigger: 'blur' },]">
+                    <el-date-picker type="date" placeholder="选择日期" v-model="form.date" style="width: 100%;"></el-date-picker>
+              </el-form-item>
+              <el-form-item label="文章图片链接"
+                    :rules="[{ required: true, message: '请填写图片链接', trigger: 'blur' },]">
+                    <el-input v-model="form.imgUrl"></el-input>
+              </el-form-item>
+              <el-form-item label="文章跳转地址"
+                    :rules="[{ required: true, message: '请填写文章跳转地址', trigger: 'blur' },]">
+                    <el-input v-model="form.link"></el-input>
+              </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+                <el-button @click="handleEditCancel">取 消</el-button>
+                <el-button type="primary" @click="submit">确 定</el-button>
+          </div>
+        </el-dialog>
     </div>
 </template>
 
 <script>
     export default {
-        data: function(){
-            return {}
+        data() {
+            return {
+                url: '../../../static/article.json',
+                tableData: [],
+                cur_page: 1,
+                multipleSelection: [],
+                query: '',
+                form: {},
+                dialogFormVisible: false
+            }
+        },
+        created(){
+            this.getData();
+        },
+        methods: {
+            handleCurrentChange(val){
+                this.cur_page = val;
+                this.getData();
+            },
+            getData(){
+                let self = this;
+                self.$axios.get(self.url, {page:self.cur_page}).then((res) => {
+                    self.tableData = res.data.list;
+                })
+            },
+            onSearch() {
+                const self = this;
+                return self.tableData.filter(function (d) {
+                    if(d.title.indexOf(self.query) > -1){
+                        return d;
+                    }
+                })
+            },
+            handleEdit(index, row) {
+                let self = this;
+                self.form.title = row.title;
+                self.form.date = row.date;
+                self.form.imgUrl = row.imgUrl;
+                self.form.link = row.link;
+                self.dialogFormVisible = true;
+            },
+            handleEditCancel() {
+                this.form = {};
+                this.dialogFormVisible = false;
+            },
+            handleDelete(index, row) {
+                this.tableData.shift(index);
+                //this.$message.error('删除第'+(index+1)+'行');
+            },
+            handleSelectionChange: function(val) {
+                this.multipleSelection = val;
+            },
+            submit: function(){
+                this.dialogFormVisible = false;
+                // this.$refs[this.form].validate((valid) => {
+                //       if (valid) {
+                //         this.dialogFormVisible = false;
+                //       } else {
+                //         console.log('error submit!!');
+                //         return false;
+                //       }
+                // });
+
+            }
         }
     }
 </script>
 
 <style scoped>
-    .ms-doc{
-        width:100%;
-        max-width: 980px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    }
-    .ms-doc h3{
-        padding: 9px 10px 10px;
-        margin: 0;
-        font-size: 14px;
-        line-height: 17px;
-        background-color: #f5f5f5;
-        border: 1px solid #d8d8d8;
-        border-bottom: 0;
-        border-radius: 3px 3px 0 0;
-    }
-    .ms-doc article{
-        padding: 45px;
-        word-wrap: break-word;
-        background-color: #fff;
-        border: 1px solid #ddd;
-        border-bottom-right-radius: 3px;
-        border-bottom-left-radius: 3px;
-    }
-    .ms-doc article h1{
-        font-size:32px;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-        border-bottom: 1px solid #ddd;
-    }
-    .ms-doc article h2 {
-        margin: 24px 0 16px;
-        font-weight: 600;
-        line-height: 1.25;
-        padding-bottom: 7px;
-        font-size: 24px;
-        border-bottom: 1px solid #eee;
-    }
-    .ms-doc article p{
-        margin-bottom: 15px;
-        line-height: 1.5;
-    }
-    .ms-doc article .el-checkbox{
-        margin-bottom: 5px;
-    }
+.handle-box{
+    margin-bottom: 20px;
+}
+.handle-del{
+    border-color: #bfcbd9;
+    color: #999;
+}
+.handle-select{
+    width: 120px;
+}
+.handle-input{
+    width: 300px;
+    display: inline-block;
+}
 </style>
