@@ -27,7 +27,7 @@
                     {
                         icon: 'el-icon-setting',
                         index: 'readme',
-                        title: '导航'
+                        title: '首页'
                     },
                     {
                         icon: 'el-icon-menu',

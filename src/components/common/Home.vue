@@ -43,7 +43,7 @@
                     "baseForm" : "baseForm",
                     "vueEditor" : "vueEditor",
                     "markdown" : "markdown",
-                    "upload " : "upload",
+                    "upload" : "upload",
                     "baseCharts " : "baseCharts",
                     "dragList " : "dragList"
     	        },
@@ -106,9 +106,6 @@
     	    		}
     	    	})
     	    }
-        },
-        created () {
-            console.log(this.router);
         }
     }
 </script>
